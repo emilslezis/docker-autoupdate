@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -5,7 +6,6 @@ import requests
 import json
 
 
-# TODO use logger
 # TODO use JSON SCHEMA
 
 def docker_autoupdate():
@@ -41,25 +41,24 @@ def update_task(params: dict) -> None:
                 json.dump(params, file)
 
         else:
-            print('version matches')
+            logging.info('UPDATE SKIPPED - latest and current version matches')
 
     elif request.status_code == 404:
         # Incorrect data
         # TODO handle 404 better
-        print(404)
+        logging.error('UPDATE FAILED - Incorrect entry data (404)')
     elif request.status_code == 500:
-        # Server issue
-        print(500)
+        logging.error('UPDATE FAILED - docker hub api server error (500)')
     else:
-        # Undefined issue
-        print(request.status_code)
+        logging.error('UPDATE FAILED - undocumented error while getting latest image')
 
 
 def container_update(params: dict) -> None:
     # TODO delete old/unused image
     # TODO handle unsuccessful commands
 
-    print('starting update')
+    logging.info('Update process has started')
+
     # Install image by specified parameters
     os.system('sudo docker pull %s/%s:%s' % (params['namespace'], params['repository'], params['tag']))
     # Stop & Drop existing container
@@ -67,7 +66,8 @@ def container_update(params: dict) -> None:
     os.system('sudo docker rm %s' % params['container_name'])
     # Create new container with command from json
     os.system(params['run_command'])
-    print('successful update')
+
+    logging.info('Update process successful')
 
 
 if __name__ == "__main__":
